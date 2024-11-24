@@ -1,0 +1,19 @@
+# GCP Configuration
+gcp:
+  project_id: "pk-arg-prj4-datasci"
+  bucket_name: "genai-final-project"
+  region: "us-central1"  # or your preferred region
+
+# Image Processing Configuration
+image_processing:
+  max_workers: 10
+  max_retries: 3
+  timeout: 10  # seconds
+  products_prefix: "images/"  # GCS prefix for storing product images
+
+# Amazon product csv configuration
+amazon_products:
+  csv_path: "amazon_product_cleaned_final_1.csv"
+  storage: "gcs"  # or "local"
+  gcs_prefix: "data/"  # GCS prefix for storing the CSV
+
