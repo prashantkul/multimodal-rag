@@ -43,11 +43,6 @@ class ImageManager:
         storage_client = storage.Client()
         self.bucket = storage_client.bucket(self.bucket_name)
         
-    def _get_next_image_number(self) -> int:
-        """Thread-safe way to get next image number"""
-        with threading.Lock():
-            self.image_counter += 1
-            return self.image_counter
 
     def _process_single_image(self, product: Product, retry_count: int = 0) -> Tuple[str, bool, Any]:
         """
@@ -60,6 +55,8 @@ class ImageManager:
         Returns:
             Tuple of (product_name, success_status, gcs_path or error_message)
         """
+        failed_products = []
+        
         try:
             # Extract file extension from URL
             parsed_url = urlparse(product.image_url)
@@ -68,11 +65,11 @@ class ImageManager:
                 ext = '.jpg'  # Default to jpg if no extension
             
             # Get next image number and format with leading zeros
-            image_num = self._get_next_image_number()
-            image_name = f"image_{image_num:06d}{ext}"  # Will produce: image_000001.jpg
+            image_num = product.unique_id
+            image_name = f"{image_num}{ext}"  # Will produce: image_000001.jpg
             
             gcs_path = f"{self.products_prefix}{image_name}"
-            print(f"***  Downloading {product.image_url} to GCS path: {gcs_path} ***")
+            print(f"***  Processing {product.unique_id} to GCS path: {gcs_path} ***")
             
             # Download image to memory
             response = requests.get(product.image_url, timeout=self.timeout, stream=True)
@@ -94,8 +91,9 @@ class ImageManager:
             # else:
             #     error_msg = f"Failed to process image for product {product.name}: {str(e)}"
             #     return product.name, False, error_msg
-            error_msg = f"Failed to process image for product {product.name}: {str(e)}"
-            return product.name, False, error_msg
+            
+            error_msg = f"Failed to process image for product {product.unique_id}: {str(e)}"
+            return product.unique_id, False, error_msg  
     
     def process_images(self) -> Dict[str, Any]:
         """
@@ -134,16 +132,16 @@ class ImageManager:
                 desc="Uploading images to GCS"
             ):
                 try:
-                    product_name, success, result = future.result()
+                    unique_id, success, result = future.result()
                     
                     if success:
                         success_count += 1
-                        results['successful_products'].append(product_name)
+                        results['successful_products'].append(unique_id)
                         results['gcs_paths'].append(result)
                     else:
                         error_count += 1
-                        results['failed_products'].append(product_name)
-                        results['errors'].append(f"{product_name}: {result}")
+                        results['failed_products'].append(unique_id)
+                        results['errors'].append(f"{unique_id}: {result}")
                         
                 except Exception as e:
                     error_count += 1

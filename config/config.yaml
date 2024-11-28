@@ -13,7 +13,7 @@ image_processing:
 
 # Amazon product csv configuration
 amazon_products:
-  csv_path: "amazon_product_cleaned_final_1.csv"
+  csv_path: "amazon_product_cleaned_final_1_cleaned_2.csv"
   storage: "gcs"  # or "local"
   gcs_prefix: "data/"  # GCS prefix for storing the CSV
 

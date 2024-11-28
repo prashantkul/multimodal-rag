@@ -7,6 +7,7 @@ from config_manager import ConfigManager
 @dataclass
 class Product:
     """Represents a product with its attributes."""
+    unique_id: str
     name: str
     category: str
     image_url: str
@@ -50,6 +51,7 @@ class DataManager:
         # Convert DataFrame rows to Product objects
         self.products = [
             Product(
+                unique_id=str(row['uniq_id']),
                 name=row['product_name'],
                 category=row['category'],
                 image_url=row['image'],
